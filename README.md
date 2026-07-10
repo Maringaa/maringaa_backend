@@ -1,98 +1,90 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Maringa: Core App Server & Event Gateway (NestJS Backend)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This is the core command-processing and ledger orchestration service for Maringa. It exposes REST APIs for organizational onboarding, programmable wallets, invoicing, and escrow management, and propagates real-time financial updates to the dashboard via WebSockets.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🏗️ System Architecture & Data Flow
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+The backend employs a database-backed double-entry ledger that guarantees accounting invariants, paired with a command idempotency lock system.
 
-## Project setup
+```mermaid
+sequenceDiagram
+    participant User as Merchant / Customer
+    participant Frontend as Next.js Dashboard
+    participant Backend as NestJS App Server
+    participant Database as PostgreSQL (TypeORM)
+    participant Redis as Redis Cache
+    participant EventBus as RabbitMQ Event Bus
+    participant Stellar as Stellar Network (Soroban RPC)
 
-```bash
-$ npm install
+    User->>Frontend: Trigger action (e.g. Settle Invoice / Fund Escrow)
+    Frontend->>Backend: POST /v1/... with X-Idempotency-Key
+    Backend->>Database: Check & acquire idempotency lock
+    alt Idempotency Key is Cached
+        Database-->>Backend: Return cached response
+        Backend-->>Frontend: Return cached response
+    else Key is New
+        Backend->>Database: Query state
+        alt Blockchain Settlement Required (USDC)
+            Backend->>Stellar: Submit Soroban Transaction (distribute / lock)
+            Stellar-->>Backend: Return Tx Hash & Ledger sequence
+        end
+        Backend->>Database: Start Transaction: post journal entries & update wallet balances
+        Database-->>Backend: Commit successful
+        Backend->>EventBus: Publish event (e.g., payments.intent.settled)
+        Backend->>Database: Save response & mark Completed
+        Backend-->>Frontend: Return HTTP 201 Success
+        EventBus-->>Frontend: Real-time broadcast via Websockets (events.gateway)
+    end
 ```
 
-## Compile and run the project
+---
 
+## 🗄️ Relational Database Schema (TypeORM + PostgreSQL)
+
+We use **TypeORM** as the ORM to manage connections and run transactions in PostgreSQL:
+
+*   **Organizations (`organizations`):** Core merchant/legal entities.
+*   **Members (`members`):** Authorized users mapped to organizations.
+*   **Wallets (`wallets`):** Accounts holding multi-currency balances (USDC, NGN, KES) stored dynamically in `jsonb` columns.
+*   **Accounts (`accounts`):** Ledger accounts (Assets, Liabilities, Equity).
+*   **Journal Entries & Transaction Lines (`journal_entries`, `transaction_lines`):** Balanced, immutable double-entry records.
+*   **Payment Intents (`payment_intents`):** Inbound merchant payments tracking.
+*   **Invoices (`invoices`):** Stateful billing objects carrying split routing commands.
+*   **Escrows (`escrows`):** Off-chain mirrors of deployed Stellar/Soroban contracts.
+*   **Idempotency Keys (`idempotency_keys`):** Anti-replay database cache.
+
+---
+
+## 🚀 Running Locally
+
+### 1. Prerequisites
+Ensure the root infrastructure is active (Postgres, Redis, RabbitMQ, Stellar RPC):
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run docker:up --prefix ../
 ```
 
-## Run tests
-
+### 2. Configure Environment
+Create a `.env` file from the example:
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cp .env.example .env
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+### 3. Start Development Server
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
+npm run start:dev
 ```
+The server will bind to port `3001` with CORS enabled.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## 🧪 CI/CD Workflow
 
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+The project's GitHub Actions workflow is located at [.github/workflows/ci.yml](file:///home/samuel/works/waves/maringa/backend/.github/workflows/ci.yml). On every push or pull request to the `main` branch, it runs:
+1.  **Code Checkout**
+2.  **Node.js Environment Setup**
+3.  **Dependencies Installation** (`npm ci`)
+4.  **Lint checks**
+5.  **NestJS Compilation Check** (`npm run build`)
