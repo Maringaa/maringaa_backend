@@ -1,7 +1,9 @@
 export type WalletType = 'TREASURY' | 'SETTLEMENT' | 'ESCROW' | 'TAX';
-export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE';
+export type AccountType =
+  'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE';
 export type EntryType = 'DEBIT' | 'CREDIT';
-export type PaymentIntentStatus = 'created' | 'authorized' | 'captured' | 'settled' | 'failed';
+export type PaymentIntentStatus =
+  'created' | 'authorized' | 'captured' | 'settled' | 'failed';
 export type InvoiceStatus = 'pending' | 'paid';
 
 export interface Organization {

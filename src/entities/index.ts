@@ -8,4 +8,3 @@ export * from './payment-intent.entity';
 export * from './invoice.entity';
 export * from './escrow.entity';
 export * from './idempotency-key.entity';
-

@@ -61,10 +61,34 @@ export class MaringaStore implements OnModuleInit {
     const memberCount = await this.memberRepo.count();
     if (memberCount === 0) {
       const membersList = [
-        { id: 'mem_1', name: 'Chidi Okoye', email: 'chidi@wholesale.ng', role: 'Owner' as const, organizationId: orgId },
-        { id: 'mem_2', name: 'Fatoumata Diallo', email: 'fatoumata@maringa.co', role: 'Admin' as const, organizationId: orgId },
-        { id: 'mem_3', name: 'Adebayo Smith', email: 'adebayo@accounting.ng', role: 'Accountant' as const, organizationId: orgId },
-        { id: 'mem_4', name: 'Developer Dan', email: 'dan@fintech.dev', role: 'Developer' as const, organizationId: orgId },
+        {
+          id: 'mem_1',
+          name: 'Chidi Okoye',
+          email: 'chidi@wholesale.ng',
+          role: 'Owner' as const,
+          organizationId: orgId,
+        },
+        {
+          id: 'mem_2',
+          name: 'Fatoumata Diallo',
+          email: 'fatoumata@maringa.co',
+          role: 'Admin' as const,
+          organizationId: orgId,
+        },
+        {
+          id: 'mem_3',
+          name: 'Adebayo Smith',
+          email: 'adebayo@accounting.ng',
+          role: 'Accountant' as const,
+          organizationId: orgId,
+        },
+        {
+          id: 'mem_4',
+          name: 'Developer Dan',
+          email: 'dan@fintech.dev',
+          role: 'Developer' as const,
+          organizationId: orgId,
+        },
       ];
       await this.memberRepo.save(this.memberRepo.create(membersList));
     }
@@ -127,17 +151,94 @@ export class MaringaStore implements OnModuleInit {
     if (accountCount === 0) {
       const ledgerId = 'ledger_main';
       const initialAccounts = [
-        { id: 'acc_treasury_ngn', ledgerId, code: '1000-TREASURY-NGN', name: 'Treasury Wallet NGN', type: 'ASSET' as const, currency: 'NGN' },
-        { id: 'acc_treasury_usdc', ledgerId, code: '1000-TREASURY-USDC', name: 'Treasury Wallet USDC', type: 'ASSET' as const, currency: 'USDC' },
-        { id: 'acc_settlement_usdc', ledgerId, code: '1010-SETTLE-USDC', name: 'Settlement Wallet USDC', type: 'ASSET' as const, currency: 'USDC' },
-        { id: 'acc_supplier_ngn', ledgerId, code: '1020-SUPPLIER-NGN', name: 'Supplier Wallet NGN', type: 'ASSET' as const, currency: 'NGN' },
-        { id: 'acc_supplier_usdc', ledgerId, code: '1020-SUPPLIER-USDC', name: 'Supplier Wallet USDC', type: 'ASSET' as const, currency: 'USDC' },
-        { id: 'acc_agent_ngn', ledgerId, code: '1030-AGENT-NGN', name: 'Agent Wallet NGN', type: 'ASSET' as const, currency: 'NGN' },
-        { id: 'acc_agent_usdc', ledgerId, code: '1030-AGENT-USDC', name: 'Agent Wallet USDC', type: 'ASSET' as const, currency: 'USDC' },
-        { id: 'acc_tax_ngn', ledgerId, code: '2200-TAX-NGN', name: 'Tax Liability NGN', type: 'LIABILITY' as const, currency: 'NGN' },
-        { id: 'acc_tax_usdc', ledgerId, code: '2200-TAX-USDC', name: 'Tax Liability USDC', type: 'LIABILITY' as const, currency: 'USDC' },
-        { id: 'acc_ar_ngn', ledgerId, code: '1200-AR-NGN', name: 'Accounts Receivable NGN', type: 'ASSET' as const, currency: 'NGN' },
-        { id: 'acc_ar_usdc', ledgerId, code: '1200-AR-USDC', name: 'Accounts Receivable USDC', type: 'ASSET' as const, currency: 'USDC' },
+        {
+          id: 'acc_treasury_ngn',
+          ledgerId,
+          code: '1000-TREASURY-NGN',
+          name: 'Treasury Wallet NGN',
+          type: 'ASSET' as const,
+          currency: 'NGN',
+        },
+        {
+          id: 'acc_treasury_usdc',
+          ledgerId,
+          code: '1000-TREASURY-USDC',
+          name: 'Treasury Wallet USDC',
+          type: 'ASSET' as const,
+          currency: 'USDC',
+        },
+        {
+          id: 'acc_settlement_usdc',
+          ledgerId,
+          code: '1010-SETTLE-USDC',
+          name: 'Settlement Wallet USDC',
+          type: 'ASSET' as const,
+          currency: 'USDC',
+        },
+        {
+          id: 'acc_supplier_ngn',
+          ledgerId,
+          code: '1020-SUPPLIER-NGN',
+          name: 'Supplier Wallet NGN',
+          type: 'ASSET' as const,
+          currency: 'NGN',
+        },
+        {
+          id: 'acc_supplier_usdc',
+          ledgerId,
+          code: '1020-SUPPLIER-USDC',
+          name: 'Supplier Wallet USDC',
+          type: 'ASSET' as const,
+          currency: 'USDC',
+        },
+        {
+          id: 'acc_agent_ngn',
+          ledgerId,
+          code: '1030-AGENT-NGN',
+          name: 'Agent Wallet NGN',
+          type: 'ASSET' as const,
+          currency: 'NGN',
+        },
+        {
+          id: 'acc_agent_usdc',
+          ledgerId,
+          code: '1030-AGENT-USDC',
+          name: 'Agent Wallet USDC',
+          type: 'ASSET' as const,
+          currency: 'USDC',
+        },
+        {
+          id: 'acc_tax_ngn',
+          ledgerId,
+          code: '2200-TAX-NGN',
+          name: 'Tax Liability NGN',
+          type: 'LIABILITY' as const,
+          currency: 'NGN',
+        },
+        {
+          id: 'acc_tax_usdc',
+          ledgerId,
+          code: '2200-TAX-USDC',
+          name: 'Tax Liability USDC',
+          type: 'LIABILITY' as const,
+          currency: 'USDC',
+        },
+        {
+          id: 'acc_ar_ngn',
+          ledgerId,
+          code: '1200-AR-NGN',
+          name: 'Accounts Receivable NGN',
+          type: 'ASSET' as const,
+          currency: 'NGN',
+        },
+        {
+          id: 'acc_ar_usdc',
+          ledgerId,
+          code: '1200-AR-USDC',
+          name: 'Accounts Receivable USDC',
+          type: 'ASSET' as const,
+          currency: 'USDC',
+        },
       ];
       await this.accountRepo.save(this.accountRepo.create(initialAccounts));
     }
@@ -159,7 +260,9 @@ export class MaringaStore implements OnModuleInit {
     }
 
     if (Math.abs(debitsSum - creditsSum) > 0.0001) {
-      throw new Error(`Ledger Imbalance: Debits (${debitsSum}) must equal Credits (${creditsSum})`);
+      throw new Error(
+        `Ledger Imbalance: Debits (${debitsSum}) must equal Credits (${creditsSum})`,
+      );
     }
 
     return this.orgRepo.manager.transaction(async (manager) => {
@@ -188,22 +291,30 @@ export class MaringaStore implements OnModuleInit {
 
       // Apply balances to wallets
       for (const line of lines) {
-        const account = await manager.findOne(Account, { where: { id: line.accountId } });
+        const account = await manager.findOne(Account, {
+          where: { id: line.accountId },
+        });
         if (!account) continue;
 
         let walletId = '';
         if (account.code.includes('TREASURY-NGN')) walletId = 'w_treasury_main';
-        else if (account.code.includes('TREASURY-USDC')) walletId = 'w_treasury_main';
-        else if (account.code.includes('SETTLE-USDC')) walletId = 'w_settlement_main';
-        else if (account.code.includes('SUPPLIER-NGN')) walletId = 'w_supplier_882';
-        else if (account.code.includes('SUPPLIER-USDC')) walletId = 'w_supplier_882';
+        else if (account.code.includes('TREASURY-USDC'))
+          walletId = 'w_treasury_main';
+        else if (account.code.includes('SETTLE-USDC'))
+          walletId = 'w_settlement_main';
+        else if (account.code.includes('SUPPLIER-NGN'))
+          walletId = 'w_supplier_882';
+        else if (account.code.includes('SUPPLIER-USDC'))
+          walletId = 'w_supplier_882';
         else if (account.code.includes('AGENT-NGN')) walletId = 'w_agent_comm';
         else if (account.code.includes('AGENT-USDC')) walletId = 'w_agent_comm';
         else if (account.code.includes('TAX-NGN')) walletId = 'w_tax_reserve';
         else if (account.code.includes('TAX-USDC')) walletId = 'w_tax_reserve';
 
         if (walletId) {
-          const wallet = await manager.findOne(Wallet, { where: { id: walletId } });
+          const wallet = await manager.findOne(Wallet, {
+            where: { id: walletId },
+          });
           if (wallet) {
             const currency = account.currency;
             const currentBal = wallet.availableBalance[currency] || 0;

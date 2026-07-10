@@ -22,17 +22,22 @@ export class AppService {
   // Auth Mock
   async login(email: string) {
     const orgId = 'org_chidi';
-    const member = await this.store.memberRepo.findOne({ where: { email, organizationId: orgId } });
+    const member = await this.store.memberRepo.findOne({
+      where: { email, organizationId: orgId },
+    });
 
     if (!member) {
       throw new BadRequestException('User not found in organization.');
     }
 
-    const organization = await this.store.orgRepo.findOne({ where: { id: orgId } });
+    const organization = await this.store.orgRepo.findOne({
+      where: { id: orgId },
+    });
 
     return {
       success: true,
-      token: 'maringa_jwt_mock_token_' + Math.random().toString(36).substr(2, 9),
+      token:
+        'maringa_jwt_mock_token_' + Math.random().toString(36).substr(2, 9),
       user: member,
       organization,
     };
@@ -61,14 +66,22 @@ export class AppService {
   }
 
   // Wallets
-  async createWallet(orgId: string, type: 'TREASURY' | 'SETTLEMENT' | 'ESCROW' | 'TAX', currency: string, name: string): Promise<Wallet> {
+  async createWallet(
+    orgId: string,
+    type: 'TREASURY' | 'SETTLEMENT' | 'ESCROW' | 'TAX',
+    currency: string,
+    name: string,
+  ): Promise<Wallet> {
     const walletId = 'w_' + Math.random().toString(36).substr(2, 9);
     const wallet = this.store.walletRepo.create({
       id: walletId,
       organizationId: orgId,
       type,
       name,
-      stellarAddress: 'G' + Math.random().toString(36).substr(2, 10).toUpperCase() + '...MOCK',
+      stellarAddress:
+        'G' +
+        Math.random().toString(36).substr(2, 10).toUpperCase() +
+        '...MOCK',
       availableBalance: { [currency]: 0 },
       reservedBalance: { [currency]: 0 },
       createdAt: new Date(),
@@ -102,7 +115,12 @@ export class AppService {
     return this.store.walletRepo.find({ where: { organizationId: orgId } });
   }
 
-  async internalTransfer(fromId: string, toId: string, amount: number, currency: string): Promise<JournalEntry> {
+  async internalTransfer(
+    fromId: string,
+    toId: string,
+    amount: number,
+    currency: string,
+  ): Promise<JournalEntry> {
     const fromW = await this.getWallet(fromId);
     const toW = await this.getWallet(toId);
 
@@ -113,10 +131,21 @@ export class AppService {
     // Map to accounts
     const accounts = await this.store.accountRepo.find();
     const fromAcc = accounts.find(
-      (a) => a.code.includes(fromId.toUpperCase()) || (fromId === 'w_treasury_main' && a.code.includes('TREASURY-' + currency)),
+      (a) =>
+        a.code.includes(fromId.toUpperCase()) ||
+        (fromId === 'w_treasury_main' &&
+          a.code.includes('TREASURY-' + currency)),
     );
     const toAcc = accounts.find(
-      (a) => a.code.includes(toId.toUpperCase()) || (toId === 'w_treasury_main' && a.code.includes('TREASURY-' + currency)) || (toId === 'w_supplier_882' && a.code.includes('SUPPLIER-' + currency)) || (toId === 'w_agent_comm' && a.code.includes('AGENT-' + currency)) || (toId === 'w_tax_reserve' && a.code.includes('TAX-' + currency)) || (toId === 'w_settlement_main' && a.code.includes('SETTLE-' + currency)),
+      (a) =>
+        a.code.includes(toId.toUpperCase()) ||
+        (toId === 'w_treasury_main' &&
+          a.code.includes('TREASURY-' + currency)) ||
+        (toId === 'w_supplier_882' &&
+          a.code.includes('SUPPLIER-' + currency)) ||
+        (toId === 'w_agent_comm' && a.code.includes('AGENT-' + currency)) ||
+        (toId === 'w_tax_reserve' && a.code.includes('TAX-' + currency)) ||
+        (toId === 'w_settlement_main' && a.code.includes('SETTLE-' + currency)),
     );
 
     if (!fromAcc || !toAcc) {
@@ -129,7 +158,7 @@ export class AppService {
       `tx_corr_${Date.now()}`,
       [
         { accountId: fromAcc.id, amount, type: 'CREDIT' as const }, // Credit decreases Asset
-        { accountId: toAcc.id, amount, type: 'DEBIT' as const },  // Debit increases Asset
+        { accountId: toAcc.id, amount, type: 'DEBIT' as const }, // Debit increases Asset
       ],
     );
 
@@ -158,7 +187,13 @@ export class AppService {
   }
 
   // Payments & Payment Intents
-  async createPaymentIntent(amount: number, currency: string, paymentMethod: string, description: string, metadata: any): Promise<PaymentIntent> {
+  async createPaymentIntent(
+    amount: number,
+    currency: string,
+    paymentMethod: string,
+    description: string,
+    metadata: any,
+  ): Promise<PaymentIntent> {
     const id = 'pi_' + Math.random().toString(36).substr(2, 9);
     const intent = this.store.intentRepo.create({
       id,
@@ -190,16 +225,28 @@ export class AppService {
 
     // 1. Post Ledger Entry: Cash Deposit (Debit Cash, Credit AR)
     const accounts = await this.store.accountRepo.find();
-    const treasuryAcc = accounts.find((a) => a.code.includes(`TREASURY-${intent.currency}`));
-    const arAcc = accounts.find((a) => a.code.includes(`AR-${intent.currency}`));
+    const treasuryAcc = accounts.find((a) =>
+      a.code.includes(`TREASURY-${intent.currency}`),
+    );
+    const arAcc = accounts.find((a) =>
+      a.code.includes(`AR-${intent.currency}`),
+    );
 
     if (treasuryAcc && arAcc) {
       await this.store.postJournalEntry(
         `Payment Settled for ${intent.description}`,
         `pi_settle_${id}`,
         [
-          { accountId: arAcc.id, amount: intent.amount, type: 'CREDIT' as const }, // Credit decreases Accounts Receivable
-          { accountId: treasuryAcc.id, amount: intent.amount, type: 'DEBIT' as const }, // Debit increases Treasury Cash
+          {
+            accountId: arAcc.id,
+            amount: intent.amount,
+            type: 'CREDIT' as const,
+          }, // Credit decreases Accounts Receivable
+          {
+            accountId: treasuryAcc.id,
+            amount: intent.amount,
+            type: 'DEBIT' as const,
+          }, // Debit increases Treasury Cash
         ],
       );
     }
@@ -220,7 +267,9 @@ export class AppService {
     // 2. Check if linked to an Invoice for revenue split
     const invoiceId = intent.metadata?.invoiceId;
     if (invoiceId) {
-      const invoice = await this.store.invoiceRepo.findOne({ where: { id: invoiceId } });
+      const invoice = await this.store.invoiceRepo.findOne({
+        where: { id: invoiceId },
+      });
       if (invoice && invoice.status === 'pending') {
         invoice.status = 'paid';
         await this.store.invoiceRepo.save(invoice);
@@ -236,7 +285,9 @@ export class AppService {
     const splits = invoice.automationRules.splits;
     const totalAmount = invoice.amount;
 
-    console.log(`Running revenue split saga for Invoice: ${invoice.id}, total: ${totalAmount} ${currency}`);
+    console.log(
+      `Running revenue split saga for Invoice: ${invoice.id}, total: ${totalAmount} ${currency}`,
+    );
 
     const treasuryWalletId = 'w_treasury_main';
 
@@ -245,43 +296,66 @@ export class AppService {
       if (splitAmount <= 0) continue;
 
       try {
-        await this.internalTransfer(treasuryWalletId, split.recipientWalletId, splitAmount, currency);
+        await this.internalTransfer(
+          treasuryWalletId,
+          split.recipientWalletId,
+          splitAmount,
+          currency,
+        );
       } catch (err) {
-        console.error(`Saga Step Failed: Split payment to ${split.recipientWalletId} failed:`, err.message);
+        console.error(
+          `Saga Step Failed: Split payment to ${split.recipientWalletId} failed:`,
+          err.message,
+        );
       }
     }
 
-    if (invoice.automationRules.triggerStellarSettlement && currency === 'USDC') {
-      await this.simulateStellarSettlement(invoice);
+    if (
+      invoice.automationRules.triggerStellarSettlement &&
+      currency === 'USDC'
+    ) {
+      this.simulateStellarSettlement(invoice);
     }
   }
 
   // Saga Component: Stellar on-chain distribution simulation
-  private async simulateStellarSettlement(invoice: Invoice) {
-    console.log(`[Stellar Settlement Saga] Distributing ${invoice.amount} USDC via RevenueSplitter Soroban Contract...`);
+  private simulateStellarSettlement(invoice: Invoice) {
+    console.log(
+      `[Stellar Settlement Saga] Distributing ${invoice.amount} USDC via RevenueSplitter Soroban Contract...`,
+    );
 
-    setTimeout(async () => {
-      const updatedSettleW = await this.getWallet('w_settlement_main');
-      this.eventsGateway.emitEvent('wallet.balance.funded', {
-        walletId: 'w_settlement_main',
-        asset: 'USDC',
-        amount: invoice.amount.toString(),
-        newBalance: (updatedSettleW.availableBalance['USDC'] || 0).toString(),
-        reference: `stellar_payout_${Math.random().toString(36).substr(2, 9)}`,
+    setTimeout(() => {
+      void this.getWallet('w_settlement_main').then((updatedSettleW) => {
+        this.eventsGateway.emitEvent('wallet.balance.funded', {
+          walletId: 'w_settlement_main',
+          asset: 'USDC',
+          amount: invoice.amount.toString(),
+          newBalance: (updatedSettleW.availableBalance['USDC'] || 0).toString(),
+          reference: `stellar_payout_${Math.random().toString(36).substr(2, 9)}`,
+        });
+        console.log(
+          `[Stellar Settlement Saga] On-chain Soroban splits successfully indexed.`,
+        );
       });
-      console.log(`[Stellar Settlement Saga] On-chain Soroban splits successfully indexed.`);
     }, 2000);
   }
 
   // Invoices
-  async createInvoice(customerId: string, amount: number, automationRules: any): Promise<Invoice> {
+  async createInvoice(
+    customerId: string,
+    amount: number,
+    automationRules: any,
+  ): Promise<Invoice> {
     const id = 'inv_' + Math.random().toString(36).substr(2, 9);
     const invoice = this.store.invoiceRepo.create({
       id,
       customerId,
       amount,
       status: 'pending',
-      automationRules: automationRules || { splits: [], triggerStellarSettlement: false },
+      automationRules: automationRules || {
+        splits: [],
+        triggerStellarSettlement: false,
+      },
       createdAt: new Date(),
     });
 
@@ -343,16 +417,20 @@ export class AppService {
 
   async fundEscrow(id: string, amount: number): Promise<Escrow> {
     const escrow = await this.getEscrow(id);
-    if (escrow.status !== 'created') throw new BadRequestException('Escrow already funded or completed.');
+    if (escrow.status !== 'created')
+      throw new BadRequestException('Escrow already funded or completed.');
 
     const clientWallet = await this.getWallet(escrow.clientAddress);
     if ((clientWallet.availableBalance[escrow.tokenAddress] || 0) < amount) {
-      throw new BadRequestException('Insufficient client funds to lock in escrow.');
+      throw new BadRequestException(
+        'Insufficient client funds to lock in escrow.',
+      );
     }
 
     // Reserve funds in the client wallet
     clientWallet.availableBalance[escrow.tokenAddress] -= amount;
-    clientWallet.reservedBalance[escrow.tokenAddress] = (clientWallet.reservedBalance[escrow.tokenAddress] || 0) + amount;
+    clientWallet.reservedBalance[escrow.tokenAddress] =
+      (clientWallet.reservedBalance[escrow.tokenAddress] || 0) + amount;
     clientWallet.availableBalance = { ...clientWallet.availableBalance }; // Trigger change detection
     clientWallet.reservedBalance = { ...clientWallet.reservedBalance };
 
@@ -377,12 +455,18 @@ export class AppService {
     return escrow;
   }
 
-  async releaseEscrowMilestone(id: string, milestoneId: number): Promise<Escrow> {
+  async releaseEscrowMilestone(
+    id: string,
+    milestoneId: number,
+  ): Promise<Escrow> {
     const escrow = await this.getEscrow(id);
-    if (escrow.status !== 'funded') throw new BadRequestException('Escrow is not funded.');
+    if (escrow.status !== 'funded')
+      throw new BadRequestException('Escrow is not funded.');
 
     if (milestoneId !== escrow.milestonesReleased + 1) {
-      throw new BadRequestException('Milestones must be released sequentially.');
+      throw new BadRequestException(
+        'Milestones must be released sequentially.',
+      );
     }
 
     const milestone = escrow.milestones.find((m) => m.id === milestoneId);
@@ -400,10 +484,14 @@ export class AppService {
 
     // Transfer from client's reserved balance to contractor's available balance
     clientWallet.reservedBalance[escrow.tokenAddress] -= shareAmount;
-    contractorWallet.availableBalance[escrow.tokenAddress] = (contractorWallet.availableBalance[escrow.tokenAddress] || 0) + shareAmount;
+    contractorWallet.availableBalance[escrow.tokenAddress] =
+      (contractorWallet.availableBalance[escrow.tokenAddress] || 0) +
+      shareAmount;
 
     clientWallet.reservedBalance = { ...clientWallet.reservedBalance };
-    contractorWallet.availableBalance = { ...contractorWallet.availableBalance };
+    contractorWallet.availableBalance = {
+      ...contractorWallet.availableBalance,
+    };
 
     await this.store.walletRepo.save(clientWallet);
     await this.store.walletRepo.save(contractorWallet);
@@ -430,7 +518,8 @@ export class AppService {
       walletId: escrow.contractorAddress,
       asset: escrow.tokenAddress,
       amount: shareAmount.toString(),
-      newBalance: contractorWallet.availableBalance[escrow.tokenAddress].toString(),
+      newBalance:
+        contractorWallet.availableBalance[escrow.tokenAddress].toString(),
       reference: `escrow_release_${id}_ms_${milestoneId}`,
     });
 
@@ -439,8 +528,12 @@ export class AppService {
 
   async refundEscrow(id: string, amount: number): Promise<Escrow> {
     const escrow = await this.getEscrow(id);
-    if (escrow.status !== 'funded') throw new BadRequestException('Escrow is not in active funded state.');
-    if (escrow.amountDeposited < amount) throw new BadRequestException('Insufficient deposited balance to refund.');
+    if (escrow.status !== 'funded')
+      throw new BadRequestException('Escrow is not in active funded state.');
+    if (escrow.amountDeposited < amount)
+      throw new BadRequestException(
+        'Insufficient deposited balance to refund.',
+      );
 
     const clientWallet = await this.getWallet(escrow.clientAddress);
 

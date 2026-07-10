@@ -1,4 +1,10 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryColumn,
+  Column,
+  CreateDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { Member } from './member.entity';
 import { Wallet } from './wallet.entity';
 

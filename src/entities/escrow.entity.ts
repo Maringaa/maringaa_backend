@@ -27,7 +27,12 @@ export class Escrow {
   @Column({ name: 'milestones_released' })
   milestonesReleased: number;
 
-  @Column({ type: 'decimal', precision: 18, scale: 4, name: 'amount_deposited' })
+  @Column({
+    type: 'decimal',
+    precision: 18,
+    scale: 4,
+    name: 'amount_deposited',
+  })
   amountDeposited: number;
 
   @Column({ type: 'decimal', precision: 18, scale: 4, name: 'amount_released' })

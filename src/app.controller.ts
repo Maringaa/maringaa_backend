@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Param, Headers, ConflictException, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Headers,
+  ConflictException,
+  Query,
+} from '@nestjs/common';
 import { AppService } from './app.service';
 import { MaringaStore } from './store';
 
@@ -12,7 +21,9 @@ export class AppController {
   // Idempotency check helper
   private async checkIdempotency(key: string) {
     if (!key) return null;
-    const existing = await this.store.idempotencyRepo.findOne({ where: { key } });
+    const existing = await this.store.idempotencyRepo.findOne({
+      where: { key },
+    });
     if (existing) {
       if (existing.status === 'PROCESSING') {
         throw new ConflictException('Request already in progress.');
@@ -64,14 +75,24 @@ export class AppController {
   // Wallets
   @Post('wallets')
   async createWallet(
-    @Body() body: { type: 'TREASURY' | 'SETTLEMENT' | 'ESCROW' | 'TAX'; currency: string; name: string },
+    @Body()
+    body: {
+      type: 'TREASURY' | 'SETTLEMENT' | 'ESCROW' | 'TAX';
+      currency: string;
+      name: string;
+    },
     @Headers('X-Idempotency-Key') idempotencyKey: string,
   ) {
     const cached = await this.checkIdempotency(idempotencyKey);
     if (cached) return cached;
 
     const orgId = 'org_chidi'; // Mock default org
-    const res = await this.appService.createWallet(orgId, body.type, body.currency, body.name);
+    const res = await this.appService.createWallet(
+      orgId,
+      body.type,
+      body.currency,
+      body.name,
+    );
     await this.saveIdempotencyResponse(idempotencyKey, res);
     return res;
   }
@@ -88,13 +109,24 @@ export class AppController {
 
   @Post('wallets/transfer')
   async transfer(
-    @Body() body: { fromWalletId: string; toWalletId: string; amount: number; currency: string },
+    @Body()
+    body: {
+      fromWalletId: string;
+      toWalletId: string;
+      amount: number;
+      currency: string;
+    },
     @Headers('X-Idempotency-Key') idempotencyKey: string,
   ) {
     const cached = await this.checkIdempotency(idempotencyKey);
     if (cached) return cached;
 
-    const res = await this.appService.internalTransfer(body.fromWalletId, body.toWalletId, body.amount, body.currency);
+    const res = await this.appService.internalTransfer(
+      body.fromWalletId,
+      body.toWalletId,
+      body.amount,
+      body.currency,
+    );
     await this.saveIdempotencyResponse(idempotencyKey, res);
     return res;
   }
@@ -102,13 +134,26 @@ export class AppController {
   // Payments & Payment Intents
   @Post('payments/intents')
   async createPaymentIntent(
-    @Body() body: { amount: number; currency: string; paymentMethod: string; description: string; metadata: any },
+    @Body()
+    body: {
+      amount: number;
+      currency: string;
+      paymentMethod: string;
+      description: string;
+      metadata: any;
+    },
     @Headers('X-Idempotency-Key') idempotencyKey: string,
   ) {
     const cached = await this.checkIdempotency(idempotencyKey);
     if (cached) return cached;
 
-    const res = await this.appService.createPaymentIntent(body.amount, body.currency, body.paymentMethod, body.description, body.metadata);
+    const res = await this.appService.createPaymentIntent(
+      body.amount,
+      body.currency,
+      body.paymentMethod,
+      body.description,
+      body.metadata,
+    );
     await this.saveIdempotencyResponse(idempotencyKey, res);
     return res;
   }
@@ -132,7 +177,11 @@ export class AppController {
     const cached = await this.checkIdempotency(idempotencyKey);
     if (cached) return cached;
 
-    const res = await this.appService.createInvoice(body.customerId, body.amount, body.automationRules);
+    const res = await this.appService.createInvoice(
+      body.customerId,
+      body.amount,
+      body.automationRules,
+    );
     await this.saveIdempotencyResponse(idempotencyKey, res);
     return res;
   }
@@ -145,13 +194,24 @@ export class AppController {
   // Escrows
   @Post('escrows')
   async createEscrow(
-    @Body() body: { amount: number; asset: string; contractorWalletId: string; milestones: any[] },
+    @Body()
+    body: {
+      amount: number;
+      asset: string;
+      contractorWalletId: string;
+      milestones: any[];
+    },
     @Headers('X-Idempotency-Key') idempotencyKey: string,
   ) {
     const cached = await this.checkIdempotency(idempotencyKey);
     if (cached) return cached;
 
-    const res = await this.appService.createEscrow(body.amount, body.asset, body.contractorWalletId, body.milestones);
+    const res = await this.appService.createEscrow(
+      body.amount,
+      body.asset,
+      body.contractorWalletId,
+      body.milestones,
+    );
     await this.saveIdempotencyResponse(idempotencyKey, res);
     return res;
   }
@@ -172,12 +232,18 @@ export class AppController {
   }
 
   @Post('escrows/:id/release')
-  async releaseEscrowMilestone(@Param('id') id: string, @Body() body: { milestoneId: number }) {
+  async releaseEscrowMilestone(
+    @Param('id') id: string,
+    @Body() body: { milestoneId: number },
+  ) {
     return this.appService.releaseEscrowMilestone(id, body.milestoneId);
   }
 
   @Post('escrows/:id/refund')
-  async refundEscrow(@Param('id') id: string, @Body() body: { amount: number }) {
+  async refundEscrow(
+    @Param('id') id: string,
+    @Body() body: { amount: number },
+  ) {
     return this.appService.refundEscrow(id, body.amount);
   }
 
