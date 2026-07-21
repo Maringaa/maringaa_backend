@@ -4,6 +4,19 @@ This is the core command-processing and ledger orchestration service for Maringa
 
 ---
 
+## ⛓️ Live Stellar Settlement Layer
+
+The backend orchestrates settlement against two Soroban contracts deployed live on Stellar Testnet (`Test SDF Network ; September 2015`):
+
+| Contract | Contract ID | Explorer |
+| --- | --- | --- |
+| Milestone Escrow | `CA2FBFRN6Y2WUFCYTN43URSLTOQEULCO65TFEUWD4HMJQCARDEUJYKDD` | [Stellar Expert](https://stellar.expert/explorer/testnet/contract/CA2FBFRN6Y2WUFCYTN43URSLTOQEULCO65TFEUWD4HMJQCARDEUJYKDD) |
+| Revenue Splitter | `CC3YJ6BAEM2EOMCOYX3UVY3DNNQ26PDA7N5KXMWRTS7HD4CWNCGZH7JM` | [Stellar Expert](https://stellar.expert/explorer/testnet/contract/CC3YJ6BAEM2EOMCOYX3UVY3DNNQ26PDA7N5KXMWRTS7HD4CWNCGZH7JM) |
+
+A verified on-chain 60/40 revenue split (`distribute`) is viewable [here](https://stellar.expert/explorer/testnet/tx/f404c8e0f0c80b365069a33ec3318605ab25d52ea46c77ddbc5328b0893a9b04).
+
+---
+
 ## 🏗️ System Architecture & Data Flow
 
 The backend employs a database-backed double-entry ledger that guarantees accounting invariants, paired with a command idempotency lock system.
